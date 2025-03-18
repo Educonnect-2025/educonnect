@@ -6,7 +6,9 @@ import string
 import uuid
 
 app = Flask(__name__)
-app.secret_key = 'educonnect_secret_key'
+import os
+
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev_secret_key_123')
 
 # Admin credentials
 ADMIN_USERNAME = 'admin'
