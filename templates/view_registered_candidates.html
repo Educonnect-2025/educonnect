@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduConnect - Registered Candidates</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .table th {
+            background: #f8fafc;
+            color: #4f46e5;
+            font-weight: 600;
+        }
+        .table td {
+            vertical-align: middle;
+        }
+        .chest-number {
+            font-family: monospace;
+            font-weight: 600;
+            color: #4f46e5;
+        }
+        .btn-export {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            color: white;
+        }
+        .event-info {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .event-info h3 {
+            color: #4f46e5;
+            margin-bottom: 1rem;
+        }
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .info-item i {
+            color: #6366f1;
+            margin-right: 0.5rem;
+            width: 20px;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="page-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1><i class="fas fa-users me-3"></i>Registered Candidates</h1>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-light">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="event-info">
+            <h3>Event Details</h3>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <i class="fas fa-trophy"></i>
+                        <strong>Event:</strong>&nbsp;{{ event.name }}
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-tag"></i>
+                        <strong>Category:</strong>&nbsp;{{ event.category }}
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="info-item">
+                        <i class="fas fa-calendar"></i>
+                        <strong>Date:</strong>&nbsp;{{ event.date }}
+                    </div>
+                    <div class="info-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <strong>Venue:</strong>&nbsp;{{ event.venue }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Total Registrations: {{ registrations|length }}</h2>
+                <button class="btn btn-export" onclick="exportToCSV()">
+                    <i class="fas fa-download me-2"></i>Export to CSV
+                </button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Chest Number</th>
+                            <th>Name</th>
+                            <th>Class</th>
+                            <th>Department</th>
+                            <th>Registration Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for reg in registrations %}
+                        <tr>
+                            <td class="chest-number">{{ reg.chest_number }}</td>
+                            <td>{{ reg.name }}</td>
+                            <td>{{ reg.class }}</td>
+                            <td>{{ reg.department }}</td>
+                            <td>{{ reg.timestamp }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function exportToCSV() {
+            // Get the table data
+            const table = document.querySelector('table');
+            const rows = table.querySelectorAll('tr');
+            let csv = [];
+            
+            // Get headers
+            const headers = [];
+            rows[0].querySelectorAll('th').forEach(cell => {
+                headers.push(cell.textContent.trim());
+            });
+            csv.push(headers.join(','));
+            
+            // Get data rows
+            for (let i = 1; i < rows.length; i++) {
+                const row = [];
+                rows[i].querySelectorAll('td').forEach(cell => {
+                    row.push('"' + cell.textContent.trim() + '"');
+                });
+                csv.push(row.join(','));
+            }
+            
+            // Create and download CSV file
+            const csvContent = csv.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'registered_candidates.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>

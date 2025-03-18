@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduConnect - My Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .achievement-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+        .achievement-card:hover {
+            transform: translateY(-5px);
+        }
+        .achievement-header {
+            background: #f8fafc;
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .event-info h5 {
+            margin: 0;
+            color: #1e293b;
+        }
+        .event-meta {
+            display: flex;
+            gap: 1.5rem;
+            margin-top: 0.5rem;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        .event-meta i {
+            color: #6366f1;
+        }
+        .achievement-body {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+        .position-badge {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            font-size: 1.2rem;
+        }
+        .position-1 {
+            background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+        }
+        .position-2 {
+            background: linear-gradient(135deg, #c0c0c0 0%, #a9a9a9 100%);
+        }
+        .position-3 {
+            background: linear-gradient(135deg, #cd7f32 0%, #8b4513 100%);
+        }
+        .position-badge i {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+        .position-text {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .achievement-details {
+            flex-grow: 1;
+        }
+        .chest-number {
+            font-family: monospace;
+            font-weight: 600;
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        .category-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        .category-arts {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .category-sports {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+        .no-results {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="page-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1><i class="fas fa-medal me-3"></i>My Achievements</h1>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-light">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        {% if results %}
+            {% for result in results %}
+                <div class="achievement-card">
+                    <div class="achievement-header">
+                        <div class="event-info">
+                            <h5>{{ result.event_name }}</h5>
+                            <div class="event-meta">
+                                <span><i class="fas fa-calendar me-2"></i>{{ result.date }}</span>
+                                <span><i class="fas fa-tag me-2"></i>{{ result.category }}</span>
+                            </div>
+                        </div>
+                        <span class="category-badge category-{{ result.category.lower() }}">
+                            {{ result.category }}
+                        </span>
+                    </div>
+                    <div class="achievement-body">
+                        <div class="position-badge position-{{ result.position }}">
+                            {% if result.position == 1 %}
+                                <i class="fas fa-crown"></i>
+                            {% elif result.position == 2 %}
+                                <i class="fas fa-award"></i>
+                            {% else %}
+                                <i class="fas fa-medal"></i>
+                            {% endif %}
+                            <span class="position-text">
+                                {% if result.position == 1 %}
+                                    Gold
+                                {% elif result.position == 2 %}
+                                    Silver
+                                {% else %}
+                                    Bronze
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="achievement-details">
+                            <div class="mb-2">
+                                <span class="chest-number me-3">{{ result.chest_number }}</span>
+                            </div>
+                            <div class="text-muted">
+                                Achieved on {{ result.timestamp }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="achievement-card">
+                <div class="no-results">
+                    <i class="fas fa-medal fa-4x mb-3"></i>
+                    <h3>No Achievements Yet</h3>
+                    <p>Your achievements will appear here once you win in events.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

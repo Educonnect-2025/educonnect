@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduConnect - View Registrations</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        .event-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+        .event-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: white;
+            padding: 1.5rem;
+            position: relative;
+        }
+        .event-header .badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+        }
+        .event-details {
+            padding: 1rem 1.5rem;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .event-info {
+            display: flex;
+            gap: 2rem;
+        }
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #64748b;
+        }
+        .info-item i {
+            color: #6366f1;
+        }
+        .table-container {
+            padding: 1.5rem;
+        }
+        .table {
+            margin-bottom: 0;
+        }
+        .table th {
+            color: #4f46e5;
+            font-weight: 600;
+            border-top: none;
+        }
+        .chest-number {
+            font-family: monospace;
+            font-weight: 600;
+            background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+        }
+        .delete-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .delete-btn:hover {
+            background: #b91c1c;
+            transform: translateY(-2px);
+        }
+        .no-events {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #64748b;
+        }
+        .flash-message {
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="page-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1><i class="fas fa-users me-3"></i>Event Registrations</h1>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-light">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'message' else 'info' }} flash-message">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% if events %}
+            {% for event_name, data in events.items() %}
+                <div class="event-card">
+                    <div class="event-header">
+                        <h3 class="mb-0">{{ event_name }}</h3>
+                        <span class="badge bg-white text-primary">
+                            {{ data.registrations|length }} Registration(s)
+                        </span>
+                    </div>
+                    
+                    <div class="event-details">
+                        <div class="event-info">
+                            <div class="info-item">
+                                <i class="fas fa-tag"></i>
+                                {{ data.event.category }}
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-calendar"></i>
+                                {{ data.event.date }}
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-clock"></i>
+                                {{ data.event.time }}
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                {{ data.event.venue }}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if data.registrations %}
+                        <div class="table-container">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Chest Number</th>
+                                            <th>Name</th>
+                                            <th>Class</th>
+                                            <th>Department</th>
+                                            <th>Registration Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for reg in data.registrations %}
+                                            <tr>
+                                                <td><span class="chest-number">{{ reg.chest_number }}</span></td>
+                                                <td>{{ reg.name }}</td>
+                                                <td>{{ reg.class }}</td>
+                                                <td>{{ reg.department }}</td>
+                                                <td>{{ reg.timestamp }}</td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="p-4 text-center text-muted">
+                            No registrations yet for this event.
+                        </div>
+                    {% endif %}
+
+                    {% if data.registrations|length < 3 %}
+                        <div class="p-3 border-top text-end">
+                            <form action="{{ url_for('delete_event') }}" method="POST" class="d-inline" 
+                                  onsubmit="return confirm('Are you sure you want to delete this event? This action cannot be undone.')">
+                                <input type="hidden" name="event_name" value="{{ event_name }}">
+                                <button type="submit" class="delete-btn">
+                                    <i class="fas fa-trash-alt me-2"></i>Delete Event
+                                </button>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="event-card">
+                <div class="no-events">
+                    <i class="fas fa-calendar-times fa-4x mb-3"></i>
+                    <h3>No Events Found</h3>
+                    <p>There are no events published yet.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

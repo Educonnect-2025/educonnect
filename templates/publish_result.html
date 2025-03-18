@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduConnect - Publish Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .result-form {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .event-header {
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+        .position-badge {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            margin-right: 1rem;
+        }
+        .position-1 {
+            background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%);
+        }
+        .position-2 {
+            background: linear-gradient(135deg, #c0c0c0 0%, #a9a9a9 100%);
+        }
+        .position-3 {
+            background: linear-gradient(135deg, #cd7f32 0%, #8b4513 100%);
+        }
+        .winner-section {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e2e8f0;
+        }
+        .add-winner-btn {
+            background: none;
+            border: 2px dashed #cbd5e1;
+            border-radius: 10px;
+            padding: 1rem;
+            width: 100%;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+        .add-winner-btn:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+            color: #475569;
+        }
+        .remove-winner-btn {
+            color: #ef4444;
+            background: none;
+            border: none;
+            padding: 0.5rem;
+            margin-left: 1rem;
+        }
+        .remove-winner-btn:hover {
+            color: #dc2626;
+        }
+        .select2-container {
+            width: 100% !important;
+        }
+        .select2-container .select2-selection--single {
+            height: 38px !important;
+            border: 1px solid #ced4da !important;
+            border-radius: 0.375rem !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 38px !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px !important;
+        }
+        .student-info {
+            display: none;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+        }
+        .student-info.show {
+            display: block;
+        }
+        .flash-messages {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .alert {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-5">
+        <!-- Back Button -->
+        <div class="mb-4">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <h2 class="mb-4">Publish Results</h2>
+
+        <!-- Result Form -->
+        <div class="result-form">
+            <form id="resultForm" action="{{ url_for('submit_result') }}" method="POST">
+                <div class="mb-4">
+                    <label for="event_name" class="form-label">Select Event</label>
+                    <select class="form-select" id="event_name" name="event_name" required>
+                        <option value="">Choose an event...</option>
+                        {% for event in events %}
+                            <option value="{{ event.name }}" 
+                                    data-category="{{ event.category }}"
+                                    data-registrations='{{ event.registrations|tojson }}'>
+                                {{ event.name }} ({{ event.category }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Registered Students -->
+                <div id="registeredStudents" class="mb-4" style="display: none;">
+                    <h5>Registered Students</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Chest No.</th>
+                                    <th>Name</th>
+                                    <th>Class</th>
+                                    <th>Department</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentsList">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Winners List -->
+                <div id="winnersList">
+                    <!-- Winners will be added here -->
+                </div>
+
+                <button type="button" id="addWinner" class="add-winner-btn mb-4">
+                    <i class="fas fa-plus me-2"></i>Add Winner
+                </button>
+
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-trophy me-2"></i>Publish Results
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            let winnerCount = 0;
+            let registeredStudents = [];
+
+            // Initialize Select2 for event select
+            $('#event_name').select2({
+                placeholder: 'Choose an event...',
+                width: '100%'
+            });
+
+            // Handle event selection
+            $('#event_name').on('change', function() {
+                const selectedOption = $(this).find('option:selected');
+                if (selectedOption.val()) {
+                    // Get registrations from data attribute
+                    registeredStudents = JSON.parse(selectedOption.attr('data-registrations') || '[]');
+                    
+                    // Update registered students table
+                    const studentsList = $('#studentsList');
+                    studentsList.empty();
+                    
+                    registeredStudents.forEach(student => {
+                        studentsList.append(`
+                            <tr>
+                                <td><span class="badge bg-primary">${student.chest_number}</span></td>
+                                <td>${student.name}</td>
+                                <td>${student.class}</td>
+                                <td>${student.department}</td>
+                            </tr>
+                        `);
+                    });
+                    
+                    $('#registeredStudents').show();
+                    $('#winnersList').empty();
+                    winnerCount = 0;
+                } else {
+                    $('#registeredStudents').hide();
+                    $('#winnersList').empty();
+                    winnerCount = 0;
+                }
+            });
+
+            // Add winner
+            $('#addWinner').click(function() {
+                if (registeredStudents.length === 0) {
+                    alert('Please select an event first');
+                    return;
+                }
+                
+                winnerCount++;
+                const usedChestNumbers = $('.chest-select').map(function() {
+                    return $(this).val();
+                }).get();
+                
+                const availableStudents = registeredStudents.filter(student => 
+                    !usedChestNumbers.includes(student.chest_number)
+                );
+                
+                if (availableStudents.length === 0) {
+                    alert('All students have been assigned positions');
+                    return;
+                }
+
+                const winnerId = `winner-${winnerCount}`;
+                const winnerHtml = `
+                    <div id="${winnerId}" class="winner-section">
+                        <div class="d-flex align-items-center mb-3">
+                            <span class="position-badge position-${winnerCount}">${winnerCount}</span>
+                            <select class="form-select chest-select" name="winners[]" required>
+                                <option value="">Select student...</option>
+                                ${availableStudents.map(student => `
+                                    <option value="${student.chest_number}" 
+                                            data-name="${student.name}"
+                                            data-class="${student.class}"
+                                            data-department="${student.department}">
+                                        ${student.chest_number} - ${student.name}
+                                    </option>
+                                `).join('')}
+                            </select>
+                            <button type="button" class="remove-winner-btn" onclick="removeWinner('${winnerId}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="student-info">
+                            <div class="student-details"></div>
+                        </div>
+                    </div>
+                `;
+                
+                $('#winnersList').append(winnerHtml);
+                
+                // Initialize Select2 for the new winner select
+                $(`#${winnerId} .chest-select`).select2({
+                    placeholder: 'Select student...',
+                    width: '100%'
+                }).on('change', function() {
+                    const selectedOption = $(this).find('option:selected');
+                    const studentInfo = $(this).closest('.winner-section').find('.student-info');
+                    const studentDetails = studentInfo.find('.student-details');
+                    
+                    if (selectedOption.val()) {
+                        studentDetails.html(`
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <strong>Name:</strong> ${selectedOption.data('name')}
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Class:</strong> ${selectedOption.data('class')}
+                                </div>
+                                <div class="col-md-4">
+                                    <strong>Department:</strong> ${selectedOption.data('department')}
+                                </div>
+                            </div>
+                        `);
+                        studentInfo.addClass('show');
+                    } else {
+                        studentInfo.removeClass('show');
+                    }
+                });
+            });
+
+            // Form validation
+            $('#resultForm').on('submit', function(e) {
+                e.preventDefault();
+                const winners = $('.chest-select').map(function() {
+                    return $(this).val();
+                }).get();
+                
+                if (winners.length === 0) {
+                    alert('Please add at least one winner');
+                    return;
+                }
+                
+                // Check for duplicate winners
+                const uniqueWinners = new Set(winners);
+                if (uniqueWinners.size !== winners.length) {
+                    alert('Each student can only win one position');
+                    return;
+                }
+                
+                this.submit();
+            });
+        });
+
+        function removeWinner(id) {
+            $(`#${id}`).remove();
+        }
+    </script>
+</body>
+</html>
